@@ -23,7 +23,8 @@ func jsnReq(method string, params interface{}) string {
 	jr["method"] = method
 	jr["params"] = params
 
-	jq, _ := json.Marshal(jr)
+	jq, err := json.Marshal(jr)
+	Er(err)
 	fmt.Println("REQUEST:", string(jq))
 	return string(jq)
 }
@@ -33,9 +34,9 @@ func apiReq(jr string, toStruct interface{}) {
 	req.SetBasicAuth("shnoodle", "78f238pf23z98f9qewfqwfwq89zf2898510970")
 	req.Header.Add("content-type", "text/plain;")
 
-	res, e := http.DefaultClient.Do(req)
-	if e != nil {
-		fmt.Println(e)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println(err)
 	} else {
 
 		defer res.Body.Close()
@@ -54,11 +55,10 @@ func apiReqRaw(jr string) {
 	req.SetBasicAuth("shnoodle", "78f238pf23z98f9qewfqwfwq89zf2898510970")
 	req.Header.Add("content-type", "text/plain;")
 
-	res, e := http.DefaultClient.Do(req)
-	if e != nil {
-		fmt.Println(e)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println(err)
 	} else {
-
 		defer res.Body.Close()
 		api, _ := ioutil.ReadAll(res.Body)
 		//GET RAW JSON
@@ -66,61 +66,61 @@ func apiReqRaw(jr string) {
 	}
 }
 
-//-- RPCs
+//-- RPC - BlockChain
 
-func call_GetBestBlockHash() {
+func blockchain_GetBestBlockHash() {
 	jr := jsnReq("getbestblockhash", []string{})
 	apiReq(jr, &GetBestBlockHash)
 }
 
-func call_GetBlock(hash string) {
+func blockchain_GetBlock(hash string) {
 	jr := jsnReq("getblock", []string{hash})
 	apiReq(jr, &GetBlock)
 }
 
-func call_GetBlockChainInfo() {
+func blockchain_GetBlockChainInfo() {
 	jr := jsnReq("getblockchaininfo", []string{})
 	apiReq(jr, &GetBlockChainInfo)
 }
 
-func call_GetBlockCount() {
+func blockchain_GetBlockCount() {
 	jr := jsnReq("getblockcount", []string{})
 	apiReq(jr, &GetBlockCount)
 }
 
-func call_GetBlockHash(height int) {
+func blockchain_GetBlockHash(height int) {
 	jr := jsnReq("getblockhash", []int{height})
 	apiReq(jr, &GetBlockHash)
 }
 
-func call_GetBlockHeader(hash string) {
+func blockchain_GetBlockHeader(hash string) {
 	jr := jsnReq("getblockheader", []string{hash})
 	apiReq(jr, &GetBlockHeader)
 }
 
-func call_GetBlockStats(height int) {
+func blockchain_GetBlockStats(height int) {
 	jr := jsnReq("getblockstats", []int{height})
 	apiReq(jr, &GetBlockStats)
 }
 
 //To get Result: GetChainTips.Result[1].Hash
-func call_GetChainTips() {
+func blockchain_GetChainTips() {
 	jr := jsnReq("getchaintips", []string{})
 	apiReq(jr, &GetChainTips)
 }
 
-func call_GetChainTxStats() {
+func blockchain_GetChainTxStats() {
 	jr := jsnReq("getchaintxstats", []string{})
 	apiReq(jr, &GetChainTxStats)
 }
 
-func call_GetDifficulty() {
+func blockchain_GetDifficulty() {
 	jr := jsnReq("getdifficulty", []string{})
 	apiReq(jr, &GetDifficulty)
 }
 
 //WIP (need txid in mempool to get raw json)
-func call_GetMemPoolAncestors(txid string) {
+func blockchain_GetMemPoolAncestors(txid string) {
 	jr := jsnReq("getmempoolancestors", []string{txid})
 	apiReqRaw(jr)
 }
@@ -128,14 +128,21 @@ func call_GetMemPoolAncestors(txid string) {
 //MISSING getmempooldescendants
 //MISSING getmempoolentry
 
-func call_GetMemPoolInfo() {
+func blockchain_GetMemPoolInfo() {
 	jr := jsnReq("getmempoolinfo", []string{})
 	apiReq(jr, &GetMempoolInfo)
 }
 
 //WIP tfw no mempool D:
-func call_GetRawMempool() {
+func blockchain_GetRawMempool() {
 	jr := jsnReq("getrawmempool", []bool{true})
+	apiReqRaw(jr)
+}
+
+//-- RPC - Control
+
+func control_GetRPCInfo() {
+	jr := jsnReq("getrpcinfo", nil)
 	apiReqRaw(jr)
 }
 
@@ -146,67 +153,61 @@ func pingdb(db *sql.DB) {
 	if err != nil {
 		fmt.Println(err)
 	} else {
-		fmt.Println("Connection to Database established!")
+		fmt.Println("Connected to DB! Connections open:", db.Stats().OpenConnections)
 	}
 }
 
 //-- Div
 
 func Er(err error) {
-	fmt.Println(err)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func main() {
-	connStr := "host=localhost user=postgres password=postgres port=5432 dbname=testdb"
+	control_GetRPCInfo()
+	connStr := "host=localhost user=postgres password=postgres port=5432 dbname=noodledb"
 
 	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		Er(err)
-	}
+	Er(err)
 	defer db.Close()
 	pingdb(db)
 
-	for i := 0; i <= 10; i++ {
-		call_GetBlockStats(i)
-		height := GetBlockStats.Result.Height
-		hash := GetBlockStats.Result.Blockhash
+	for i := 1; i <= 3; i++ {
+		blockchain_GetBlockStats(i)
+		gbs := GetBlockStats.Result
 
 		tx, err := db.Begin()
-		if err != nil {
-			Er(err)
-		}
+		Er(err)
 		defer tx.Rollback()
-		stmt, err := tx.Prepare("INSERT INTO testtable VALUES ($1, $2)")
-		if err != nil {
-			Er(err)
-		}
+		stmt, err := tx.Prepare("INSERT INTO testtable VALUES ($1)")
+		Er(err)
 		defer stmt.Close()
-		_, err = stmt.Exec(height, hash)
-		if err != nil {
-			Er(err)
-		}
+		_, err = stmt.Exec(
+			gbs.Height,
+		)
+		Er(err)
 		err = tx.Commit()
-		if err != nil {
-			Er(err)
-		}
+		Er(err)
 	}
 
 	//--- playout
 	/*
 		var (
-			name  string
-			based string
+			height    int
+			blockhash string
+			ins       int
+			outs      int
 		)
 
-		rows, _ := db.Query("select * from homies")
+		rows, _ := db.Query("select * from testtable")
 		defer rows.Close()
 
 		for rows.Next() {
-			err := rows.Scan(&name, &based)
-			if err != nil {
-				Er(err)
-			}
-			fmt.Println(name, based)
+			err := rows.Scan(&height, &blockhash, &ins, &outs)
+			Er(err)
+			fmt.Println(height, blockhash, ins, outs)
 		}
 	*/
 }
