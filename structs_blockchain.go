@@ -1,5 +1,18 @@
 package main
 
+var GetBestBlockHash GetBestBlockHash_
+var GetBlock GetBlock_
+var GetBlockChainInfo GetBlockChainInfo_
+var GetBlockCount GetBlockCount_
+var GetBlockHash GetBlockHash_
+var GetBlockHeader GetBlockHeader_
+var GetBlockStats GetBlockStats_
+var GetChainTips GetChainTips_
+var GetChainTxStats GetChainTxStats_
+var GetDifficulty GetDifficulty_
+
+var GetMempoolInfo GetMempoolInfo_
+
 type GetBestBlockHash_ struct {
 	Result string      `json:"result"`
 	Error  interface{} `json:"error"`
@@ -208,16 +221,3 @@ type GetMempoolInfo_ struct {
 	Error interface{} `json:"error"`
 	ID    string      `json:"id"`
 }
-
-var GetBestBlockHash GetBestBlockHash_
-var GetBlock GetBlock_
-var GetBlockChainInfo GetBlockChainInfo_
-var GetBlockCount GetBlockCount_
-var GetBlockHash GetBlockHash_
-var GetBlockHeader GetBlockHeader_
-var GetBlockStats GetBlockStats_
-var GetChainTips GetChainTips_
-var GetChainTxStats GetChainTxStats_
-var GetDifficulty GetDifficulty_
-
-var GetMempoolInfo GetMempoolInfo_

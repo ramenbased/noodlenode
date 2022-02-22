@@ -139,6 +139,13 @@ func blockchain_GetRawMempool() {
 	apiReqRaw(jr)
 }
 
+//-- RPC - Raw Transactions
+
+func getrawtxs_GetRawTransaction(txid string, verbose bool, blockhash string) {
+	jr := jsnReq("getrawtransaction", []interface{}{txid, verbose, blockhash})
+	apiReq(jr, &GetRawTransaction)
+}
+
 //-- RPC - Control
 
 func control_GetRPCInfo() {
@@ -166,7 +173,10 @@ func Er(err error) {
 }
 
 func main() {
-	control_GetRPCInfo()
+	blockchain_GetBlockHash(600000)
+	blockchain_GetBlock(GetBlockHash.Result)
+	getrawtxs_GetRawTransaction(GetBlock.Result.Tx[1], true, GetBlockHash.Result)
+	fmt.Println("TX:", GetBlock.Result.Tx[1], "Confirmations:", GetRawTransaction.Result.Confirmations)
 	connStr := "host=localhost user=postgres password=postgres port=5432 dbname=noodledb"
 
 	db, err := sql.Open("postgres", connStr)
@@ -174,24 +184,25 @@ func main() {
 	defer db.Close()
 	pingdb(db)
 
-	for i := 1; i <= 3; i++ {
-		blockchain_GetBlockStats(i)
-		gbs := GetBlockStats.Result
+	/*
+		for i := 1; i <= 3; i++ {
+			blockchain_GetBlockStats(i)
+			gbs := GetBlockStats.Result
 
-		tx, err := db.Begin()
-		Er(err)
-		defer tx.Rollback()
-		stmt, err := tx.Prepare("INSERT INTO testtable VALUES ($1)")
-		Er(err)
-		defer stmt.Close()
-		_, err = stmt.Exec(
-			gbs.Height,
-		)
-		Er(err)
-		err = tx.Commit()
-		Er(err)
-	}
-
+			tx, err := db.Begin()
+			Er(err)
+			defer tx.Rollback()
+			stmt, err := tx.Prepare("INSERT INTO testtable VALUES ($1)")
+			Er(err)
+			defer stmt.Close()
+			_, err = stmt.Exec(
+				gbs.Height,
+			)
+			Er(err)
+			err = tx.Commit()
+			Er(err)
+		}
+	*/
 	//--- playout
 	/*
 		var (
