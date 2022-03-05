@@ -11,7 +11,11 @@ var GetChainTips GetChainTips_
 var GetChainTxStats GetChainTxStats_
 var GetDifficulty GetDifficulty_
 
+var GetMempoolAncestors GetMempoolAncestors_
+var GetMempoolDescendants GetMempoolDescendants_
+var GetRawMempoolEntry GetRawMempoolEntry_
 var GetMempoolInfo GetMempoolInfo_
+var GetRawMempool GetRawMempool_
 
 type GetBestBlockHash_ struct {
 	Result string      `json:"result"`
@@ -204,7 +208,46 @@ type GetDifficulty_ struct {
 	ID     string      `json:"id"`
 }
 
-//MISSING SOME
+type GetMempoolAncestors_ struct {
+	Result []string    `json:"result"`
+	Error  interface{} `json:"error"`
+	ID     string      `json:"id"`
+}
+
+type GetMempoolDescendants_ struct {
+	Result []string    `json:"result"`
+	Error  interface{} `json:"error"`
+	ID     string      `json:"id"`
+}
+type GetRawMempoolEntry_ struct {
+	Result struct {
+		Fees struct {
+			Base       float64 `json:"base"`
+			Modified   float64 `json:"modified"`
+			Ancestor   float64 `json:"ancestor"`
+			Descendant float64 `json:"descendant"`
+		} `json:"fees"`
+		Vsize             int           `json:"vsize"`
+		Weight            int           `json:"weight"`
+		Fee               float64       `json:"fee"`
+		Modifiedfee       float64       `json:"modifiedfee"`
+		Time              int           `json:"time"`
+		Height            int           `json:"height"`
+		Descendantcount   int           `json:"descendantcount"`
+		Descendantsize    int           `json:"descendantsize"`
+		Descendantfees    int           `json:"descendantfees"`
+		Ancestorcount     int           `json:"ancestorcount"`
+		Ancestorsize      int           `json:"ancestorsize"`
+		Ancestorfees      int           `json:"ancestorfees"`
+		Wtxid             string        `json:"wtxid"`
+		Depends           []interface{} `json:"depends"`
+		Spentby           []interface{} `json:"spentby"`
+		Bip125Replaceable bool          `json:"bip125-replaceable"`
+		Unbroadcast       bool          `json:"unbroadcast"`
+	} `json:"result"`
+	Error interface{} `json:"error"`
+	ID    string      `json:"id"`
+}
 
 type GetMempoolInfo_ struct {
 	Result struct {
@@ -220,4 +263,10 @@ type GetMempoolInfo_ struct {
 	} `json:"result"`
 	Error interface{} `json:"error"`
 	ID    string      `json:"id"`
+}
+
+type GetRawMempool_ struct {
+	Result []string    `json:"result"`
+	Error  interface{} `json:"error"`
+	ID     string      `json:"id"`
 }

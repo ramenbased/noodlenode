@@ -74,7 +74,7 @@ func blockchain_GetBestBlockHash() {
 }
 
 func blockchain_GetBlock(hash string) {
-	jr := jsnReq("getblock", []string{hash})
+	jr := jsnReq("getblock", []interface{}{hash, 1})
 	apiReq(jr, &GetBlock)
 }
 
@@ -103,7 +103,6 @@ func blockchain_GetBlockStats(height int) {
 	apiReq(jr, &GetBlockStats)
 }
 
-//To get Result: GetChainTips.Result[1].Hash
 func blockchain_GetChainTips() {
 	jr := jsnReq("getchaintips", []string{})
 	apiReq(jr, &GetChainTips)
@@ -119,23 +118,38 @@ func blockchain_GetDifficulty() {
 	apiReq(jr, &GetDifficulty)
 }
 
-//WIP (need txid in mempool to get raw json)
-func blockchain_GetMemPoolAncestors(txid string) {
-	jr := jsnReq("getmempoolancestors", []string{txid})
-	apiReqRaw(jr)
+func blockchain_GetMempoolAncestors(txid string) {
+	jr := jsnReq("getmempoolancestors", []interface{}{txid, false})
+	apiReq(jr, &GetMempoolAncestors)
 }
 
-//MISSING getmempooldescendants
-//MISSING getmempoolentry
+func blockchain_GetMempoolDescendants(txid string) {
+	jr := jsnReq("getmempooldescendants", []interface{}{txid, false})
+	apiReq(jr, &GetMempoolDescendants)
+}
 
-func blockchain_GetMemPoolInfo() {
+func blockchain_GetMempoolEntry(txid string) {
+	jr := jsnReq("getmempoolentry", []string{txid})
+	apiReq(jr, &GetRawMempoolEntry)
+}
+
+func blockchain_GetMempoolInfo() {
 	jr := jsnReq("getmempoolinfo", []string{})
 	apiReq(jr, &GetMempoolInfo)
 }
 
-//WIP tfw no mempool D:
 func blockchain_GetRawMempool() {
-	jr := jsnReq("getrawmempool", []bool{true})
+	jr := jsnReq("getrawmempool", []bool{false})
+	apiReq(jr, &GetRawMempool)
+}
+
+func blockchain_GetTxOutsetInfo() {
+	jr := jsnReq("gettxoutsetinfo", nil)
+	apiReqRaw(jr)
+}
+
+func blockchain_GetTxOut(txid string, n int) {
+	jr := jsnReq("gettxout", []interface{}{txid, n})
 	apiReqRaw(jr)
 }
 
@@ -173,12 +187,8 @@ func Er(err error) {
 }
 
 func main() {
-	blockchain_GetBlockHash(600000)
-	blockchain_GetBlock(GetBlockHash.Result)
-	getrawtxs_GetRawTransaction(GetBlock.Result.Tx[1], true, GetBlockHash.Result)
-	fmt.Println("TX:", GetBlock.Result.Tx[1], "Confirmations:", GetRawTransaction.Result.Confirmations)
-	connStr := "host=localhost user=postgres password=postgres port=5432 dbname=noodledb"
 
+	connStr := "host=localhost user=postgres password=postgres port=5432 dbname=noodledb"
 	db, err := sql.Open("postgres", connStr)
 	Er(err)
 	defer db.Close()
