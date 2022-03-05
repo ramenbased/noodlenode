@@ -1,7 +1,5 @@
 package main
 
-var GetRawTransaction GetRawTransaction_
-
 type GetRawTransaction_ struct {
 	Result struct {
 		InActiveChain bool   `json:"in_active_chain"`

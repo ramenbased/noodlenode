@@ -68,86 +68,118 @@ func apiReqRaw(jr string) {
 
 //-- RPC - BlockChain
 
-func blockchain_GetBestBlockHash() {
+func blockchain_GetBestBlockHash() *GetBestBlockHash_ {
 	jr := jsnReq("getbestblockhash", []string{})
-	apiReq(jr, &GetBestBlockHash)
+	var rv GetBestBlockHash_
+	apiReq(jr, &rv)
+	return &rv
 }
 
-func blockchain_GetBlock(hash string) {
+func blockchain_GetBlock(hash string) *GetBlock_ {
 	jr := jsnReq("getblock", []interface{}{hash, 1})
-	apiReq(jr, &GetBlock)
+	var rv GetBlock_
+	apiReq(jr, &rv)
+	return &rv
 }
 
-func blockchain_GetBlockChainInfo() {
+func blockchain_GetBlockChainInfo() *GetBlockChainInfo_ {
 	jr := jsnReq("getblockchaininfo", []string{})
-	apiReq(jr, &GetBlockChainInfo)
+	var rv GetBlockChainInfo_
+	apiReq(jr, &rv)
+	return &rv
 }
 
-func blockchain_GetBlockCount() {
+func blockchain_GetBlockCount() *GetBlockCount_ {
 	jr := jsnReq("getblockcount", []string{})
-	apiReq(jr, &GetBlockCount)
+	var rv GetBlockCount_
+	apiReq(jr, &rv)
+	return &rv
 }
 
-func blockchain_GetBlockHash(height int) {
+func blockchain_GetBlockHash(height int) *GetBlockHash_ {
 	jr := jsnReq("getblockhash", []int{height})
-	apiReq(jr, &GetBlockHash)
+	var rv GetBlockHash_
+	apiReq(jr, &rv)
+	return &rv
 }
 
-func blockchain_GetBlockHeader(hash string) {
+func blockchain_GetBlockHeader(hash string) *GetBlockHeader_ {
 	jr := jsnReq("getblockheader", []string{hash})
-	apiReq(jr, &GetBlockHeader)
+	var rv GetBlockHeader_
+	apiReq(jr, &rv)
+	return &rv
 }
 
-func blockchain_GetBlockStats(height int) {
+func blockchain_GetBlockStats(height int) *GetBlockStats_ {
 	jr := jsnReq("getblockstats", []int{height})
-	apiReq(jr, &GetBlockStats)
+	var rv GetBlockStats_
+	apiReq(jr, &rv)
+	return &rv
 }
 
-func blockchain_GetChainTips() {
+func blockchain_GetChainTips() *GetChainTips_ {
 	jr := jsnReq("getchaintips", []string{})
-	apiReq(jr, &GetChainTips)
+	var rv GetChainTips_
+	apiReq(jr, &rv)
+	return &rv
 }
 
-func blockchain_GetChainTxStats() {
+func blockchain_GetChainTxStats() *GetChainTxStats_ {
 	jr := jsnReq("getchaintxstats", []string{})
-	apiReq(jr, &GetChainTxStats)
+	var rv GetChainTxStats_
+	apiReq(jr, &rv)
+	return &rv
 }
 
-func blockchain_GetDifficulty() {
+func blockchain_GetDifficulty() *GetDifficulty_ {
 	jr := jsnReq("getdifficulty", []string{})
-	apiReq(jr, &GetDifficulty)
+	var rv GetDifficulty_
+	apiReq(jr, &rv)
+	return &rv
 }
 
-func blockchain_GetMempoolAncestors(txid string) {
+func blockchain_GetMempoolAncestors(txid string) *GetMempoolAncestors_ {
 	jr := jsnReq("getmempoolancestors", []interface{}{txid, false})
-	apiReq(jr, &GetMempoolAncestors)
+	var rv GetMempoolAncestors_
+	apiReq(jr, &rv)
+	return &rv
 }
 
-func blockchain_GetMempoolDescendants(txid string) {
+func blockchain_GetMempoolDescendants(txid string) *GetMempoolDescendants_ {
 	jr := jsnReq("getmempooldescendants", []interface{}{txid, false})
-	apiReq(jr, &GetMempoolDescendants)
+	var rv GetMempoolDescendants_
+	apiReq(jr, &rv)
+	return &rv
 }
 
-func blockchain_GetMempoolEntry(txid string) {
+func blockchain_GetMempoolEntry(txid string) *GetRawMempoolEntry_ {
 	jr := jsnReq("getmempoolentry", []string{txid})
-	apiReq(jr, &GetRawMempoolEntry)
+	var rv GetRawMempoolEntry_
+	apiReq(jr, &rv)
+	return &rv
 }
 
-func blockchain_GetMempoolInfo() {
+func blockchain_GetMempoolInfo() *GetMempoolInfo_ {
 	jr := jsnReq("getmempoolinfo", []string{})
-	apiReq(jr, &GetMempoolInfo)
+	var rv GetMempoolInfo_
+	apiReq(jr, &rv)
+	return &rv
 }
 
-func blockchain_GetRawMempool() {
+func blockchain_GetRawMempool() *GetRawMempool_ {
 	jr := jsnReq("getrawmempool", []bool{false})
-	apiReq(jr, &GetRawMempool)
+	var rv GetRawMempool_
+	apiReq(jr, &rv)
+	return &rv
 }
 
+//WIP
 func blockchain_GetTxOutsetInfo() {
 	jr := jsnReq("gettxoutsetinfo", nil)
 	apiReqRaw(jr)
 }
 
+//WIP
 func blockchain_GetTxOut(txid string, n int) {
 	jr := jsnReq("gettxout", []interface{}{txid, n})
 	apiReqRaw(jr)
@@ -155,9 +187,11 @@ func blockchain_GetTxOut(txid string, n int) {
 
 //-- RPC - Raw Transactions
 
-func getrawtxs_GetRawTransaction(txid string, verbose bool, blockhash string) {
+func getrawtxs_GetRawTransaction(txid string, verbose bool, blockhash string) *GetRawTransaction_ {
 	jr := jsnReq("getrawtransaction", []interface{}{txid, verbose, blockhash})
-	apiReq(jr, &GetRawTransaction)
+	var rv GetRawTransaction_
+	apiReq(jr, &rv)
+	return &rv
 }
 
 //-- RPC - Control
@@ -187,6 +221,9 @@ func Er(err error) {
 }
 
 func main() {
+
+	a := blockchain_GetBlockCount()
+	fmt.Println(a.Result)
 
 	connStr := "host=localhost user=postgres password=postgres port=5432 dbname=noodledb"
 	db, err := sql.Open("postgres", connStr)

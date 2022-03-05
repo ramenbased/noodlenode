@@ -1,22 +1,5 @@
 package main
 
-var GetBestBlockHash GetBestBlockHash_
-var GetBlock GetBlock_
-var GetBlockChainInfo GetBlockChainInfo_
-var GetBlockCount GetBlockCount_
-var GetBlockHash GetBlockHash_
-var GetBlockHeader GetBlockHeader_
-var GetBlockStats GetBlockStats_
-var GetChainTips GetChainTips_
-var GetChainTxStats GetChainTxStats_
-var GetDifficulty GetDifficulty_
-
-var GetMempoolAncestors GetMempoolAncestors_
-var GetMempoolDescendants GetMempoolDescendants_
-var GetRawMempoolEntry GetRawMempoolEntry_
-var GetMempoolInfo GetMempoolInfo_
-var GetRawMempool GetRawMempool_
-
 type GetBestBlockHash_ struct {
 	Result string      `json:"result"`
 	Error  interface{} `json:"error"`
