@@ -25,7 +25,7 @@ func jsnReq(method string, params interface{}) string {
 
 	jq, err := json.Marshal(jr)
 	Er(err)
-	fmt.Println("REQUEST:", string(jq))
+	//fmt.Println("REQUEST:", string(jq))
 	return string(jq)
 }
 
@@ -68,105 +68,105 @@ func apiReqRaw(jr string) {
 
 //-- RPC - BlockChain
 
-func blockchain_GetBestBlockHash() *GetBestBlockHash_ {
+func GetBestBlockHash() *GetBestBlockHash_ {
 	jr := jsnReq("getbestblockhash", []string{})
 	var rv GetBestBlockHash_
 	apiReq(jr, &rv)
 	return &rv
 }
 
-func blockchain_GetBlock(hash string) *GetBlock_ {
+func GetBlock(hash string) *GetBlock_ {
 	jr := jsnReq("getblock", []interface{}{hash, 1})
 	var rv GetBlock_
 	apiReq(jr, &rv)
 	return &rv
 }
 
-func blockchain_GetBlockChainInfo() *GetBlockChainInfo_ {
+func GetBlockChainInfo() *GetBlockChainInfo_ {
 	jr := jsnReq("getblockchaininfo", []string{})
 	var rv GetBlockChainInfo_
 	apiReq(jr, &rv)
 	return &rv
 }
 
-func blockchain_GetBlockCount() *GetBlockCount_ {
+func GetBlockCount() *GetBlockCount_ {
 	jr := jsnReq("getblockcount", []string{})
 	var rv GetBlockCount_
 	apiReq(jr, &rv)
 	return &rv
 }
 
-func blockchain_GetBlockHash(height int) *GetBlockHash_ {
+func GetBlockHash(height int) *GetBlockHash_ {
 	jr := jsnReq("getblockhash", []int{height})
 	var rv GetBlockHash_
 	apiReq(jr, &rv)
 	return &rv
 }
 
-func blockchain_GetBlockHeader(hash string) *GetBlockHeader_ {
+func GetBlockHeader(hash string) *GetBlockHeader_ {
 	jr := jsnReq("getblockheader", []string{hash})
 	var rv GetBlockHeader_
 	apiReq(jr, &rv)
 	return &rv
 }
 
-func blockchain_GetBlockStats(height int) *GetBlockStats_ {
+func GetBlockStats(height int) *GetBlockStats_ {
 	jr := jsnReq("getblockstats", []int{height})
 	var rv GetBlockStats_
 	apiReq(jr, &rv)
 	return &rv
 }
 
-func blockchain_GetChainTips() *GetChainTips_ {
+func GetChainTips() *GetChainTips_ {
 	jr := jsnReq("getchaintips", []string{})
 	var rv GetChainTips_
 	apiReq(jr, &rv)
 	return &rv
 }
 
-func blockchain_GetChainTxStats() *GetChainTxStats_ {
+func GetChainTxStats() *GetChainTxStats_ {
 	jr := jsnReq("getchaintxstats", []string{})
 	var rv GetChainTxStats_
 	apiReq(jr, &rv)
 	return &rv
 }
 
-func blockchain_GetDifficulty() *GetDifficulty_ {
+func GetDifficulty() *GetDifficulty_ {
 	jr := jsnReq("getdifficulty", []string{})
 	var rv GetDifficulty_
 	apiReq(jr, &rv)
 	return &rv
 }
 
-func blockchain_GetMempoolAncestors(txid string) *GetMempoolAncestors_ {
+func GetMempoolAncestors(txid string) *GetMempoolAncestors_ {
 	jr := jsnReq("getmempoolancestors", []interface{}{txid, false})
 	var rv GetMempoolAncestors_
 	apiReq(jr, &rv)
 	return &rv
 }
 
-func blockchain_GetMempoolDescendants(txid string) *GetMempoolDescendants_ {
+func GetMempoolDescendants(txid string) *GetMempoolDescendants_ {
 	jr := jsnReq("getmempooldescendants", []interface{}{txid, false})
 	var rv GetMempoolDescendants_
 	apiReq(jr, &rv)
 	return &rv
 }
 
-func blockchain_GetMempoolEntry(txid string) *GetRawMempoolEntry_ {
+func GetMempoolEntry(txid string) *GetRawMempoolEntry_ {
 	jr := jsnReq("getmempoolentry", []string{txid})
 	var rv GetRawMempoolEntry_
 	apiReq(jr, &rv)
 	return &rv
 }
 
-func blockchain_GetMempoolInfo() *GetMempoolInfo_ {
+func GetMempoolInfo() *GetMempoolInfo_ {
 	jr := jsnReq("getmempoolinfo", []string{})
 	var rv GetMempoolInfo_
 	apiReq(jr, &rv)
 	return &rv
 }
 
-func blockchain_GetRawMempool() *GetRawMempool_ {
+func GetRawMempool() *GetRawMempool_ {
 	jr := jsnReq("getrawmempool", []bool{false})
 	var rv GetRawMempool_
 	apiReq(jr, &rv)
@@ -174,13 +174,13 @@ func blockchain_GetRawMempool() *GetRawMempool_ {
 }
 
 //WIP
-func blockchain_GetTxOutsetInfo() {
+func GetTxOutsetInfo() {
 	jr := jsnReq("gettxoutsetinfo", nil)
 	apiReqRaw(jr)
 }
 
 //WIP
-func blockchain_GetTxOut(txid string, n int) {
+func GetTxOut(txid string, n int) {
 	jr := jsnReq("gettxout", []interface{}{txid, n})
 	apiReqRaw(jr)
 }
@@ -222,8 +222,14 @@ func Er(err error) {
 
 func main() {
 
-	a := blockchain_GetBlockCount()
-	fmt.Println(a.Result)
+	best := GetBestBlockHash()
+	block := GetBlock(best.Result)
+	height := block.Result.Height
+
+	for b := 1; b <= height; b++ {
+		stats := GetBlockStats(b)
+		fmt.Println(stats.Result.Height, ",", stats.Result.Txs)
+	}
 
 	connStr := "host=localhost user=postgres password=postgres port=5432 dbname=noodledb"
 	db, err := sql.Open("postgres", connStr)
