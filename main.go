@@ -174,14 +174,14 @@ func GetRawMempool() *GetRawMempool_ {
 }
 
 //WIP
-func GetTxOutsetInfo() {
-	jr := jsnReq("gettxoutsetinfo", nil)
+func GetTxOut(txid string, n int) {
+	jr := jsnReq("gettxout", []interface{}{txid, n})
 	apiReqRaw(jr)
 }
 
 //WIP
-func GetTxOut(txid string, n int) {
-	jr := jsnReq("gettxout", []interface{}{txid, n})
+func GetTxOutsetInfo() {
+	jr := jsnReq("gettxoutsetinfo", nil)
 	apiReqRaw(jr)
 }
 
@@ -221,15 +221,10 @@ func Er(err error) {
 }
 
 func main() {
-
+	fmt.Println("ITS COOKING TIME :D")
 	best := GetBestBlockHash()
 	block := GetBlock(best.Result)
 	height := block.Result.Height
-
-	for b := 1; b <= height; b++ {
-		stats := GetBlockStats(b)
-		fmt.Println(stats.Result.Height, ",", stats.Result.Txs)
-	}
 
 	connStr := "host=localhost user=postgres password=postgres port=5432 dbname=noodledb"
 	db, err := sql.Open("postgres", connStr)
@@ -237,25 +232,26 @@ func main() {
 	defer db.Close()
 	pingdb(db)
 
-	/*
-		for i := 1; i <= 3; i++ {
-			blockchain_GetBlockStats(i)
-			gbs := GetBlockStats.Result
+	for b := 1; b <= height; b++ {
 
-			tx, err := db.Begin()
-			Er(err)
-			defer tx.Rollback()
-			stmt, err := tx.Prepare("INSERT INTO testtable VALUES ($1)")
-			Er(err)
-			defer stmt.Close()
-			_, err = stmt.Exec(
-				gbs.Height,
-			)
-			Er(err)
-			err = tx.Commit()
-			Er(err)
-		}
-	*/
+		stats := GetBlockStats(b).Result
+
+		tx, err := db.Begin()
+		Er(err)
+		defer tx.Rollback()
+		stmt, err := tx.Prepare("INSERT INTO testtable VALUES ($1)")
+		Er(err)
+		defer stmt.Close()
+		_, err = stmt.Exec(
+			stats.Height,    //int
+			stats.Blockhash, //string
+			stats.Time,      //int
+			stats.Medianfee, //int
+		)
+		Er(err)
+		err = tx.Commit()
+		Er(err)
+	}
 	//--- playout
 	/*
 		var (
