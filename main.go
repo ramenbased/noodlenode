@@ -201,17 +201,6 @@ func control_GetRPCInfo() {
 	apiReqRaw(jr)
 }
 
-//-- Postgres
-
-func pingdb(db *sql.DB) {
-	err := db.Ping()
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println("Connected to DB! Connections open:", db.Stats().OpenConnections)
-	}
-}
-
 //-- Div
 
 func Er(err error) {
@@ -220,26 +209,55 @@ func Er(err error) {
 	}
 }
 
-func main() {
-	fmt.Println("ITS COOKING TIME :D")
+//-- Postgres
+
+func dbPing(db *sql.DB) {
+	err := db.Ping()
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("Connected to DB! Connections open:", db.Stats().OpenConnections)
+	}
+}
+
+func dbHeight(db *sql.DB) int {
+	var (
+		height    int
+		blockhash string
+		time      int
+		medianfee int
+		rv        int
+	)
+
+	rows, _ := db.Query("select * from blockstats")
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(&height, &blockhash, &time, &medianfee)
+		Er(err)
+		if height > rv {
+			rv = height
+		}
+	}
+	fmt.Println("DB: Highest Block found in DB is:", rv)
+	return rv
+
+}
+
+func routine(db *sql.DB, heightInDB int) {
+
 	best := GetBestBlockHash()
 	block := GetBlock(best.Result)
 	height := block.Result.Height
 
-	connStr := "host=localhost user=postgres password=postgres port=5432 dbname=noodledb"
-	db, err := sql.Open("postgres", connStr)
-	Er(err)
-	defer db.Close()
-	pingdb(db)
-
-	for b := 1; b <= height; b++ {
+	for b := heightInDB + 1; b <= height; b++ {
 
 		stats := GetBlockStats(b).Result
 
 		tx, err := db.Begin()
 		Er(err)
 		defer tx.Rollback()
-		stmt, err := tx.Prepare("INSERT INTO testtable VALUES ($1)")
+		stmt, err := tx.Prepare("INSERT INTO blockstats VALUES ($1,$2,$3,$4)")
 		Er(err)
 		defer stmt.Close()
 		_, err = stmt.Exec(
@@ -249,25 +267,21 @@ func main() {
 			stats.Medianfee, //int
 		)
 		Er(err)
+		fmt.Println("Height:", stats.Height)
 		err = tx.Commit()
 		Er(err)
 	}
-	//--- playout
-	/*
-		var (
-			height    int
-			blockhash string
-			ins       int
-			outs      int
-		)
 
-		rows, _ := db.Query("select * from testtable")
-		defer rows.Close()
+}
 
-		for rows.Next() {
-			err := rows.Scan(&height, &blockhash, &ins, &outs)
-			Er(err)
-			fmt.Println(height, blockhash, ins, outs)
-		}
-	*/
+func main() {
+	connStr := "host=localhost user=postgres password=postgres port=5432 dbname=noodledb"
+	db, err := sql.Open("postgres", connStr)
+	Er(err)
+	defer db.Close()
+	dbPing(db)
+	for {
+		heightInDB := dbHeight(db)
+		routine(db, heightInDB)
+	}
 }
