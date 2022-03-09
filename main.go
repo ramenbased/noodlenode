@@ -51,30 +51,35 @@ func dbHeight(db *sql.DB) int {
 
 func routine(db *sql.DB, heightInDB int) {
 
-	best := GetBestBlockHash()
-	block := GetBlock(best.Result)
-	height := block.Result.Height
+	count := GetBlockCount()
+	fmt.Println("Current Block Count:", count.Result)
 
-	for b := heightInDB + 1; b <= height; b++ {
+	for b := heightInDB + 1; b <= count.Result; b++ {
 
 		stats := GetBlockStats(b).Result
+		conf := GetBlock(stats.Blockhash)
 
-		tx, err := db.Begin()
-		Er(err)
-		defer tx.Rollback()
-		stmt, err := tx.Prepare("INSERT INTO blockstats VALUES ($1,$2,$3,$4)")
-		Er(err)
-		defer stmt.Close()
-		_, err = stmt.Exec(
-			stats.Height,    //int
-			stats.Blockhash, //string
-			stats.Time,      //int
-			stats.Medianfee, //int
-		)
-		Er(err)
-		err = tx.Commit()
-		Er(err)
-		fmt.Println("Commited Height to DB:", stats.Height)
+		if conf.Result.Confirmations >= 6 {
+			tx, err := db.Begin()
+			Er(err)
+			defer tx.Rollback()
+			stmt, err := tx.Prepare("INSERT INTO blockstats VALUES ($1,$2,$3,$4)")
+			Er(err)
+			defer stmt.Close()
+			_, err = stmt.Exec(
+				stats.Height,    //int
+				stats.Blockhash, //string
+				stats.Time,      //int
+				stats.Medianfee, //int
+			)
+			Er(err)
+			err = tx.Commit()
+			fmt.Println(conf)
+			Er(err)
+			fmt.Println("Commited Height to DB:", stats.Height)
+		} else {
+			fmt.Println("Block", stats.Height, "discarded due to", conf.Result.Confirmations, "confirmations")
+		}
 
 	}
 }
@@ -87,8 +92,8 @@ func main() {
 	dbPing(db)
 	cycle := 0
 	for {
-		heightInDB := dbHeight(db)
 		fmt.Println("#########################")
+		heightInDB := dbHeight(db)
 		fmt.Println("Height DB:", heightInDB)
 		routine(db, heightInDB)
 		time.Sleep(time.Second * 10)
