@@ -3,6 +3,8 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"os"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -29,19 +31,18 @@ func dbPing(db *sql.DB) {
 
 func dbHeight(db *sql.DB) int {
 	var (
-		height    int
-		blockhash string
-		time      int
-		medianfee int
-		rv        int
+		height int
+		rv     int
 	)
 
-	rows, _ := db.Query("select * from blockstats")
+	rows, _ := db.Query("select height from blockstats")
 	defer rows.Close()
 
 	for rows.Next() {
-		err := rows.Scan(&height, &blockhash, &time, &medianfee)
-		Er(err)
+		err := rows.Scan(&height)
+		if err != nil {
+			log.Fatal(err)
+		}
 		if height > rv {
 			rv = height
 		}
@@ -59,24 +60,37 @@ func routine(db *sql.DB, heightInDB int) {
 		stats := GetBlockStats(b).Result
 		conf := GetBlock(stats.Blockhash)
 
+		tx, err := db.Begin()
+		Er(err)
+		defer tx.Rollback()
+
 		if conf.Result.Confirmations >= 6 {
-			tx, err := db.Begin()
-			Er(err)
-			defer tx.Rollback()
-			stmt, err := tx.Prepare("INSERT INTO blockstats VALUES ($1,$2,$3,$4)")
+			stmt, err := tx.Prepare("INSERT INTO blockstats VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)")
 			Er(err)
 			defer stmt.Close()
 			_, err = stmt.Exec(
-				stats.Height,    //int
-				stats.Blockhash, //string
-				stats.Time,      //int
-				stats.Medianfee, //int
+				stats.Height,       //int
+				stats.Blockhash,    //string
+				stats.Time,         //int
+				stats.Medianfee,    //int
+				stats.Avgfee,       //int
+				stats.Avgfeerate,   //int
+				stats.Ins,          //int
+				stats.Mediantxsize, //int
+				stats.Outs,         //int
+				stats.Swtxs,        //int
+				stats.Totalfee,     //int
+				stats.Txs,          //int
+				stats.UtxoIncrease, //int
+				stats.UtxoSizeInc,  //int
 			)
 			Er(err)
 			err = tx.Commit()
-			fmt.Println(conf)
-			Er(err)
-			fmt.Println("Commited Height to DB:", stats.Height)
+			if err != nil {
+				Er(err)
+				os.Exit(1)
+			}
+			fmt.Println(">>>>> Commited Height to DB:", stats.Height, "<<<<<<")
 		} else {
 			fmt.Println("Block", stats.Height, "discarded due to", conf.Result.Confirmations, "confirmations")
 		}
